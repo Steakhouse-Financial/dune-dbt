@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: bibta_gnosis
+    tables:
+      - name: backedtokenimplementation_evt_transfer
+  
+  - name: ondofinance_ethereum
+    tables:
+      - name: ondofinance_evt_transfer
+      - name: usdy_evt_transfer
+      - name: usdyc_evt_transfer
+
+  - name: blackrock_buidl_ethereum
+    tables:
+      - name: dstoken_evt_transfer
+
+  - name: buidl_token_multichain
+    tables:
+      - name: buidl_token_evt_transfer
+
+  - name: franklin_templeton_multichain
+    tables:
+      - name: moneymarketfund_v5_evt_transfer
+
+  - name: superstate_ethereum
+    tables:
+      - name: ustb_evt_transfer
+      - name: superstatetokenv5_1_evt_transfer
+
+  - name: jtrsy_multichain
+    tables:
+      - name: tranche_evt_transfer
+
+  - name: hashnote_multichain
+    tables:
+      - name: shortdurationyieldcoin_evt_transfer
+
+  - name: wtgxx_ethereum
+    tables:
+      - name: erc20revocablecompliancestandard_evt_transfer
+
+  - name: dinari_arbitrum
+    tables:
+      - name: usfrd_evt_transfer
+
+  - name: tbill_ethereum
+    tables:
+      - name: openedenvaultv2_evt_transfer
+
+  - name: spiko_multichain
+    tables:
+      - name: token_evt_transfer
+
+  - name: tokens_solana
+    tables:
+      - name: transfers

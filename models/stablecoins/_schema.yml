@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: dbt_yielding_erc20_rwas
+    description: "Calculates the daily net deltas (mints minus burns) for yielding RWA tokens on ERC20 chains."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - dt
+              - blockchain
+    config:
+      tags: ["rwa", "daily_metrics", "evm", 'ethereum', 'arbitrum', 'bnb', 'base']
+    columns:
+      - name: blockchain
+        description: "The network the token lives on (e.g., ethereum, gnosis, arbitrum)."
+        tests:
+          - not_null
+      - name: dt
+        description: "The specific block date for the aggregated transfers."
+        tests:
+          - not_null
+      - name: protocol
+        description: "The issuer of the token (e.g., Backed Finance, Ondo)."
+      - name: token_name
+        description: "The symbol or name of the token (e.g., USDY, BUIDL)."
+      - name: token_address
+        description: "The smart contract address (EVM) of the token."
+        tests:
+          - not_null
+      - name: daily_net_amount
+        description: "The scaled net amount minted or burned on this day. (0 if no activity)."
+
+  - name: dbt_yielding_spl_rwas
+    description: "Calculates the daily net deltas (mints minus burns) for yielding RWA tokens on the Solana network."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - dt
+              - token_address
+    config:
+      tags: ["rwa", "solana", "daily_metrics"]
+    columns:
+      - name: blockchain
+        description: "The network the token lives on (solana)."
+        tests:
+          - not_null
+      - name: dt
+        description: "The specific block date for the aggregated transfers."
+        tests:
+          - not_null
+      - name: protocol
+        description: "The issuer of the token (e.g., Ondo, Franklin Templeton)."
+      - name: token_name
+        description: "The symbol or name of the token (e.g., USDY, BENJI)."
+      - name: token_address
+        description: "The mint address (Solana) of the token."
+        tests:
+          - not_null
+      - name: daily_net_amount
+        description: "The scaled net amount minted or burned on this day. (0 if no activity)."
