@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: tether_polygon
+    tables:
+      - name: uchilderc20_evt_transfer
+  - name: tether_tron
+    tables:
+      - name: tether_usd_evt_transfer
+  - name: tether_arbitrum
+    tables:
+      - name: ArbitrumExtension_evt_Transfer
+  - name: bep20usdt_bnb
+    tables:
+      - name: bep20usdt_evt_transfer
+  - name: tether_ethereum
+    tables:
+      - name: tether_usd_evt_transfer
