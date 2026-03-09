@@ -1,0 +1,31 @@
+protocol,blockchain,token_address,token_name,token_decimals,start_date
+backed finance,ethereum,0x52d134c6db5889fad3542a09eaf7aa90c0fdf9e4,bIBTA,18,2023-03-02
+backed finance,gnosis,0x52d134c6db5889fad3542a09eaf7aa90c0fdf9e4,bIBTA,18,2023-03-06
+blackrock,ethereum,0x6a9da2d710bb9b700acde7cb81f10f1ff8c89041,BUIDL-I,6,2024-12-17
+blackrock,ethereum,0x7712c34205737192402172409a8f7ccef8aa2aec,BUIDL,6,2024-03-01
+blackrock,avalanche_c,0x53fc82f14f009009b440a706e31c9021e1196a2f,BUIDL,6,2024-11-14
+blackrock,arbitrum,0xa6525ae43edcd03dc08e775774dcabd3bb925872,BUIDL,6,2024-11-04
+blackrock,optimism,0xa1cdab15bba75a80df4089cafba013e376957cf5,BUIDL,6,2024-11-04
+blackrock,polygon,0x2893ef551b6dd69f661ac00f11d93e5dc5dc0e99,BUIDL,6,2024-11-04
+ondo,ethereum,0x1b19c19393e2d034d8ff31ff34c81252fcbbee92,OUSG,18,2022-12-21
+ondo,ethereum,0x96f6ef951840721adbf46ac996b59e0235cb985c,USDY,18,2023-07-11
+ondo,ethereum,0xe86845788d6e3e5c2393ade1a051ae617d974c09,USDYc,18,2023-09-18
+franklin templeton,arbitrum,0xb9e4765bce2609bc1949592059b17ea72fee6c6a,BENJI,18,2023-11-06
+franklin templeton,base,0x60cfc2b186a4cf647486e42c42b11cc6d571d1e4,BENJI,18,2024-10-18
+franklin templeton,ethereum,0x3ddc84940ab509c11b20b76b466933f40b750dc9,BENJI,18,2024-08-22
+franklin templeton,avalanche_c,0xe08b4c1005603427420e64252a8b120cace4d122,BENJI,18,2024-08-22
+franklin templeton,polygon,0x408a634b8a8f0de729b48574a3a7ec3fe820b00a,BENJI,18,2023-10-03
+superstate,ethereum,0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e,USTB,6,2023-12-06
+superstate,ethereum,0x14d60e7fdc0d71d8611742720e4c50e7a974020c,USCC,6,2024-07-09
+centrifuge,ethereum,0x8c213ee79581ff4984583c6a801e5263418c4b86,JTRSY,6,2024-08-05
+centrifuge,base,0x8c213ee79581ff4984583c6a801e5263418c4b86,JTRSY,6,2024-08-05
+hashnote,ethereum,0x136471a34f6ef19fe571effc1ca711fdb8e49f2b,USYC,6,2023-05-31
+wisdom tree,ethereum,0x1fecf3d9d4fee7f2c02917a66028a48c6706c179,WTGXX,18,2024-09-14
+wisdom tree,arbitrum,0x9c46e1b70d447b770dbfc8d450543a431af6df3a,USFR.d,18,2023-11-13
+openeden,ethereum,0xdd50c053c096cb04a3e3362e2b622529ec5f2e8a,TBILL,6,2023-10-18
+spiko,polygon,0xa0769f7a8fc65e47de93797b4e21c073c117fc80,EUTBL,5,2024-04-19
+spiko,arbitrum,0xcbeb19549054cc0a6257a77736fc78c367216ce7,EUTBL,5,2024-10-25
+spiko,ethereum,0xe4880249745eac5f1ed9d8f7df844792d560e750,USTBL,5,2024-04-19
+spiko,polygon,0xe4880249745eac5f1ed9d8f7df844792d560e750,USTBL,5,2024-04-19
+spiko,arbitrum,0x021289588cd81dc1ac87ea91e91607eef68303f5,USTBL,5,2024-10-25
+spiko,ethereum,0xa0769f7a8fc65e47de93797b4e21c073c117fc80,EUTBL,5,2024-04-19
