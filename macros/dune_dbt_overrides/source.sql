@@ -1,5 +1,12 @@
-{% macro source(source_name, table_name, database="delta_prod") %}
+{% macro source(source_name, table_name) %}
+  {% set team_name = env_var('DUNE_TEAM_NAME', 'steakhouse') %}
   {% set rel = builtins.source(source_name, table_name) %}
-  {% set newrel = rel.replace_path(database=database) %}
-  {% do return(newrel) %}
+
+  {# Route Materialized Views to the 'dune' catalog #}
+  {% if source_name == team_name %}
+    {% do return(rel.replace_path(database="dune")) %}
+  {# Route all raw decoded blockchain data to the 'delta_prod' catalog #}
+  {% else %}
+    {% do return(rel.replace_path(database="delta_prod")) %}
+  {% endif %}
 {% endmacro %}
