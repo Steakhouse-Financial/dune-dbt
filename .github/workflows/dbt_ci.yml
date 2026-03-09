@@ -24,7 +24,7 @@ jobs:
 
     env:
       DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
-      DUNE_TEAM_NAME: ${{ vars.DUNE_TEAM_NAME || 'dune' }}  # Set as GitHub Variable or defaults to 'dune'
+      DUNE_TEAM_NAME: ${{ vars.DUNE_TEAM_NAME || 'steakhouse' }}  # Set as GitHub Variable or defaults to 'steakhouse'
       DEV_SCHEMA_SUFFIX: pr${{ github.event.pull_request.number }}
 
     steps:
