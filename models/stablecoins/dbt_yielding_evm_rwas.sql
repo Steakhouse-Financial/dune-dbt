@@ -8,7 +8,7 @@
 
 
 {{ config(
-    alias = 'dbt_yielding_erc20_rwas'
+    alias = 'dbt_yielding_evm_rwas'
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
     , properties = {
@@ -119,6 +119,9 @@ ondo_transfers as (
             and t.evt_block_date >= tk.start_date
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
+    {% if is_incremental() %}
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     GROUP BY 1, 2, 3
     
 )

@@ -1,62 +1,147 @@
 version: 2
 
 models:
-  - name: dbt_yielding_erc20_rwas
-    description: "Calculates the daily net deltas (mints minus burns) for yielding RWA tokens on ERC20 chains."
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - dt
-              - blockchain
-    config:
-      tags: ["rwa", "daily_metrics", "evm", 'ethereum', 'arbitrum', 'bnb', 'base']
+  - name: dbt_yielding_evm_rwas
+    description: >
+      Incremental model calculating daily net transfer amounts for yielding EVM RWAs (Real World Assets).
+      Aggregates transfers across multiple chains and protocols (e.g. Ondo, Backed, Blackrock, etc.).
     columns:
       - name: blockchain
-        description: "The network the token lives on (e.g., ethereum, gnosis, arbitrum)."
+        description: "The EVM chain where the token lives (e.g. ethereum, gnosis, arbitrum)."
         tests:
           - not_null
       - name: dt
-        description: "The specific block date for the aggregated transfers."
+        description: "The date of the transfers."
         tests:
           - not_null
       - name: protocol
-        description: "The issuer of the token (e.g., Backed Finance, Ondo)."
+        description: "The protocol issuing the RWA."
       - name: token_name
-        description: "The symbol or name of the token (e.g., USDY, BUIDL)."
+        description: "The name of the RWA token."
       - name: token_address
-        description: "The smart contract address (EVM) of the token."
+        description: "The contract address of the RWA token."
         tests:
           - not_null
       - name: daily_net_amount
-        description: "The scaled net amount minted or burned on this day. (0 if no activity)."
+        description: "The net amount of tokens minted/transferred on the given date."
+
+  - name: dbt_yielding_evm_stablecoins
+    description: >
+      Incremental model calculating daily net transfer amounts for yielding EVM stablecoins.
+      Covers major yield-bearing stablecoins across protocols like Aave, Sky, Ethena, Elixir, Reservoir, Maple, Compound, and Usual.
+    columns:
+      - name: dt
+        description: "The date of the transfers."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The EVM chain (e.g. ethereum, avalanche, polygon)."
+        tests:
+          - not_null
+      - name: category
+        description: "The category of the token."
+      - name: protocol
+        description: "The protocol issuing the yield-bearing stablecoin."
+      - name: token_address
+        description: "The contract address of the yield-bearing token."
+        tests:
+          - not_null
+      - name: token_name
+        description: "The name of the yield-bearing token."
+      - name: underlying_token_address
+        description: "The contract address of the underlying asset (e.g. USDC, USDT)."
+      - name: underlying_token_name
+        description: "The name of the underlying asset."
+      - name: daily_net_amount
+        description: "The net amount of yield-bearing tokens minted/burned on the given date."
 
   - name: dbt_yielding_spl_rwas
-    description: "Calculates the daily net deltas (mints minus burns) for yielding RWA tokens on the Solana network."
-    data_tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - dt
-              - token_address
-    config:
-      tags: ["rwa", "solana", "daily_metrics"]
+    description: >
+      Incremental model calculating daily net transfer and mint/burn amounts for yielding SPL (Solana) RWAs.
     columns:
       - name: blockchain
-        description: "The network the token lives on (solana)."
+        description: "The blockchain name, typically 'solana'."
         tests:
           - not_null
       - name: dt
-        description: "The specific block date for the aggregated transfers."
+        description: "The date of the transfers."
         tests:
           - not_null
       - name: protocol
-        description: "The issuer of the token (e.g., Ondo, Franklin Templeton)."
+        description: "The protocol issuing the RWA on Solana."
       - name: token_name
-        description: "The symbol or name of the token (e.g., USDY, BENJI)."
+        description: "The name of the SPL RWA token."
       - name: token_address
-        description: "The mint address (Solana) of the token."
+        description: "The mint address of the SPL token."
         tests:
           - not_null
       - name: daily_net_amount
-        description: "The scaled net amount minted or burned on this day. (0 if no activity)."
+        description: "The net amount of tokens minted/burned on the given date."
+
+  - name: fct_yielding_evm_stablecoins
+    description: >
+      Fact view calculating cumulative balances and USD values of yielding EVM stablecoins on a daily basis.
+    columns:
+      - name: blockchain
+        description: "The EVM chain."
+      - name: dt
+        description: "The date of the balance."
+      - name: protocol
+        description: "The protocol issuing the stablecoin."
+      - name: category
+        description: "Category classification (e.g. rwa)."
+      - name: token_name
+        description: "The name of the token."
+      - name: token_address
+        description: "The contract address of the token."
+      - name: balance
+        description: "Cumulative balance up to the given date."
+      - name: price_usd
+        description: "The daily price of the token or yield index multiplier in USD."
+      - name: value_usd
+        description: "Total USD value (balance * price_usd)."
+
+  - name: fct_yielding_rwas
+    description: >
+      Fact view calculating cumulative balances and USD values of yielding RWAs on a daily basis.
+    columns:
+      - name: blockchain
+        description: "The blockchain."
+      - name: dt
+        description: "The date of the balance."
+      - name: protocol
+        description: "The protocol issuing the RWA."
+      - name: category
+        description: "Hardcoded category, typically 'rwa'."
+      - name: token_name
+        description: "The name of the RWA token."
+      - name: token_address
+        description: "The contract address of the token."
+      - name: balance
+        description: "Cumulative balance of the token up to the given date."
+      - name: price_usd
+        description: "The token price in USD. Defaults to 1 for specific tokens like BUIDL, BENJI, etc."
+      - name: value_usd
+        description: "Total USD value (balance * price_usd)."
+
+  - name: int_yielding_indices
+    description: >
+      Intermediate table that calculates and backfills daily yield indices (supply index, liquidity index, etc.) 
+      for various protocols like Aave, Sky, Maker, Compound v3, and Morpho.
+    columns:
+      - name: dt
+        description: "The date of the index record."
+        tests:
+          - not_null
+      - name: chain
+        description: "The blockchain network."
+        tests:
+          - not_null
+      - name: protocol
+        description: "The protocol managing the yield index."
+      - name: token_address
+        description: "The address of the token or vault associated with the index."
+        tests:
+          - not_null
+      - name: index
+        description: "The index value used to calculate token accrual or yield multiplier."

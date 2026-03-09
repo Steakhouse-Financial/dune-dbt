@@ -7,12 +7,12 @@
 
 
 {{ config(
-    alias = 'dbt_yielding_erc20_stablecoins'
-    , enabled=false
+    alias = 'dbt_yielding_evm_stablecoins'
+    , enabled=true
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
     , properties = {
-        "partitioned_by": "ARRAY['dt', 'blockchain']"
+        "partitioned_by": "ARRAY['dt', 'blockchain', 'token_name']"
     }
 )
 }}
@@ -52,60 +52,31 @@ aave_transfers_v2 as (
     from (
         select
             tr.chain,
-            m.evt_block_date as dt,
+            tr.evt_block_date as dt,
             tk.token_address,
-            (m."value"/ power(10, tk.token_decimals)) / (tr.index / 1e27) as amount
-        from {{ source('aave_v2_multichain', 'atoken_evt_mint')}} m
+            (tr."value"/ power(10, tk.token_decimals)) / (tr.index / 1e27) as amount
+        from {{ source('aave_v2_multichain', 'atoken_evt_mint')}} tr
         join tokens tk
             on tr.chain = tk.chain and tr.contract_address = tk.token_address
         where tk.protocol = 'aave-v2'
+        {% if is_incremental() %}
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
         union all
         select
             tr.chain,
-            b.evt_block_date as dt,
+            tr.evt_block_date as dt,
             tk.token_address,
             -(tr."value" / power(10, tk.token_decimals)) / (tr.index / 1e27) as amount
-        from {{ source('aave_v2_multichain', 'atoken_evt_burn')}} b
+        from {{ source('aave_v2_multichain', 'atoken_evt_burn')}} tr
         join tokens tk
             on tr.chain = tk.chain and tr.contract_address = tk.token_address
         where tk.protocol = 'aave-v2'
+        {% if is_incremental() %}
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
     )
     group by 1,2,3
-),
--- get aave supply indices per reserve and backfill it if no pool updates
-aave_indices_v2 as (
-    select
-        chain,
-        underlying_token_address,
-        dt,
-        last_value(coalesce(l.index, 1)) ignore nulls over (partition by chain, underlying_token_address order by dt asc rows between unbounded preceding and current row) as index
-    from seq s
-    left join (
-        select
-            chain,
-            reserve as underlying_token_address,
-            date(evt_block_time) as dt,
-            max(liquidityIndex / 1e27) as index
-        from aave_v2_multichain.lendingpool_evt_reservedataupdated
-        group by 1,2,3
-    ) l using (chain, underlying_token_address, dt)
-    where s.protocol = 'aave-v2'
-),
--- calculate the atoken balance taking into account their yield (therefore, multiplying by the latest daily supply index)
-aave_balance_v2 as (
-    select
-        chain,
-        dt,
-        tk.protocol,
-        tk.category,
-        tk.token_name,
-        token_address,
-        sum(coalesce(t.amount, 0)) over (partition by chain, token_address order by dt asc) * i.index as amount
-    from seq s
-    join tokens tk using (chain, token_address, underlying_token_address)
-    left join aave_transfers_v2 t using (chain, token_address, dt)
-    left join aave_indices_v2 i using (chain, underlying_token_address, dt)
-    where s.protocol = 'aave-v2'
 ),
 -- ************************************************************************************************************************
 -- *********************************                     A A V E  V3                   ************************************
@@ -128,6 +99,10 @@ aave_transfers_v3 as (
             on m.chain = tk.chain
             and m.contract_address = tk.token_address
             where tk.protocol = 'aave-v3'
+        {% if is_incremental() %}
+            AND m.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
+    
         union all
         select
             b.chain,
@@ -139,59 +114,11 @@ aave_transfers_v3 as (
             on b.chain = tk.chain
             and b.contract_address = tk.token_address
             where tk.protocol = 'aave-v3'
+        {% if is_incremental() %}
+            AND b.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
     )
     group by 1,2,3
-),
--- get aave supply indices per reserve and backfill it if no pool updates
-aave_indices_v3 as (
-    select
-        chain,
-        underlying_token_address,
-        dt,
-        last_value(l.index) ignore nulls over (partition by chain, underlying_token_address order by dt asc rows between unbounded preceding and current row) as index
-    from seq s
-    left join (
-        select
-            chain,
-            reserve as underlying_token_address,
-            date(evt_block_time) as dt,
-            max(liquidityIndex / 1e27) as index
-        from aave_v3_multichain.pool_evt_ReserveDataUpdated -- ethereum, avalanche
-        group by 1,2,3
-        union all
-        select
-            'arbitrum' as chain,
-            reserve as underlying_token_address,
-            date(evt_block_time) as dt,
-            max(liquidityIndex / 1e27) as index
-        from aave_v3_arbitrum.l2pool_evt_reservedataupdated -- arbitrum
-        group by 1,2,3
-        union all
-        select
-            'base' as chain,
-            reserve as underlying_token_address,
-            date(evt_block_time) as dt,
-            max(liquidityIndex / 1e27) as index
-        from aave_v3_base.l2pool_evt_reservedataupdated -- base
-        group by 1,2,3
-    ) l using (chain, underlying_token_address, dt)
-    where s.protocol = 'aave-v3'
-),
--- calculate the atoken balance taking into account their yield (therefore, multiplying by the latest daily supply index)
-aave_balance_v3 as (
-    select
-        chain,
-        dt,
-        tk.protocol,
-        tk.category,
-        tk.token_name,
-        token_address,
-        sum(coalesce(t.amount, 0)) over (partition by chain, token_address order by dt asc) * i.index as amount
-    from seq s
-    join tokens tk using (chain, token_address, underlying_token_address)
-    left join aave_transfers_v3 t using (chain, token_address, dt)
-    left join aave_indices_v3 i using (chain, underlying_token_address, dt)
-    where s.protocol = 'aave-v3'
 ),
 -- ************************************************************************************************************************
 -- ***********************************             S K Y  -  sUSDS, sDAI             **************************************
@@ -209,6 +136,9 @@ susds_transfers as (
         ) / 1e18 as amount
     from {{ source('sky_ethereum', 'susds_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
+    {% if is_incremental() %}
+        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- @dev: sDAI deposits & withdrawals in ethereum do not emit transfer event
@@ -221,16 +151,20 @@ sdai_transfers as (
     from (
         select
             contract_address as token_address,
-            date(evt_block_time) as dt,
+            evt_block_date as dt,
             shares as amount
         from {{ source('maker_ethereum', 'SavingsDai_evt_Deposit')}}
         union all
         select
             contract_address as token_address,
-            date(evt_block_time) as dt,
+            evt_block_date as dt,
             -shares as amount
         from {{ source('maker_ethereum', 'SavingsDai_evt_Withdraw')}}
     )
+    WHERE 1=1
+    {% if is_incremental() %}
+        AND dt >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- ************************************************************************************************************************
@@ -247,8 +181,11 @@ usde_transfers as (
                 when "to" = 0x0000000000000000000000000000000000000000 then -"value"
             end
         ) / 1e18 as amount
-    from ethena_labs_ethereum.stakedusdev2_evt_transfer
+    from {{ source('ethena_labs_ethereum', 'stakedusdev2_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
+    {% if is_incremental() %}
+        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- ************************************************************************************************************************
@@ -265,8 +202,11 @@ sdeusd_transfers as (
                 when "to" = 0x0000000000000000000000000000000000000000 then -"value"
             end
         ) / 1e18 as amount
-    from elixir_ethereum.stdeusd_evt_transfer
+    from  {{ source('elixir_ethereum', 'stdeusd_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
+    {% if is_incremental() %}
+        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- ************************************************************************************************************************
@@ -283,8 +223,11 @@ srusd_transfers as (
                 when "to" = 0x0000000000000000000000000000000000000000 then -"value"
             end
         ) / 1e18 as amount
-    from reservoir_protocol_ethereum.savingcoin_evt_transfer
+    from  {{ source('reservoir_protocol_ethereum', 'savingcoin_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
+    {% if is_incremental() %}
+        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 wsrusd_transfers as (
@@ -298,8 +241,11 @@ wsrusd_transfers as (
                 when "to" = 0x0000000000000000000000000000000000000000 then -"value"
             end
         ) / 1e18 as amount
-    from reservoir_protocol_ethereum.savingcoinv2_evt_transfer
+    from {{ source('reservoir_protocol_ethereum', 'savingcoinv2_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
+    {% if is_incremental() %}
+        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- ************************************************************************************************************************
@@ -316,11 +262,14 @@ syrup_transfers as (
                 when tr.recipient_ = 0x0000000000000000000000000000000000000000 then -amount_
             end
         ) / 1e6 as amount
-    from maplefinance_v2_ethereum.pool_v2_evt_transfer tr
+    from {{ source('maplefinance_v2_ethereum', 'pool_v2_evt_transfer')}} tr
     join tokens tk
         on tr.contract_address = tk.token_address
     where tk.protocol = 'maple'
         and 0x0000000000000000000000000000000000000000 in (tr.owner_, tr.recipient_)
+    {% if is_incremental() %}
+        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 ),
 -- ************************************************************************************************************************
@@ -339,50 +288,37 @@ compound_transfers_v2 as (
             date(tr.evt_block_time) as dt,
             tr.mintTokens as amount
         from (
-            select evt_block_time, contract_address, mintTokens from compound_v2_ethereum.cerc20_evt_mint
+            select evt_block_date, evt_block_time, contract_address, mintTokens
+            from {{ source('compound_v2_ethereum', 'cerc20_evt_mint')}}
             union all
-            select evt_block_time, contract_address, mintTokens from compound_v2_ethereum.cerc20delegator_evt_mint
+            select evt_block_date, evt_block_time, contract_address, mintTokens
+            from {{ source('compound_v2_ethereum', 'cerc20delegator_evt_mint')}}
         ) tr
         join tokens tk on tr.contract_address = tk.token_address
         where tk.protocol = 'compound-v2'
+        {% if is_incremental() %}
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
+    
         union all
         select
             tr.contract_address as token_address,
             date(tr.evt_block_time) as dt,
             -tr.redeemTokens as amount
         from (
-            select evt_block_time, contract_address, redeemTokens from compound_v2_ethereum.cerc20_evt_redeem
+            select evt_block_date, evt_block_time, contract_address, redeemTokens
+            from {{ source('compound_v2_ethereum', 'cerc20_evt_redeem')}}
             union all
-            select evt_block_time, contract_address, redeemTokens from compound_v2_ethereum.cerc20delegator_evt_redeem
+            select evt_block_date, evt_block_time, contract_address, redeemTokens
+            from {{ source('compound_v2_ethereum', 'cerc20delegator_evt_redeem')}}
         ) tr
         join tokens tk on tr.contract_address = tk.token_address
         where tk.protocol = 'compound-v2'
+        {% if is_incremental() %}
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        {% endif %}
     )
     group by 1,2
-),
--- ************************************************************************************************************************
--- *********************************     C O M P O U N D  V3 -  cUSDC, cUSDT       ****************************************
--- ************************************************************************************************************************
-compound_balance_v3 as (
-    select
-        s.chain,
-        s.dt,
-        tk.protocol,
-        tk.category,
-        tk.token_name,
-        tk.token_address,
-        coalesce(t.supply_tokens, 0) as amount,
-        coalesce(t.supply_usd, 0) as value_usd
-    from seq s
-    join tokens tk
-        on s.chain = tk.chain
-        and s.token_address = tk.token_address
-        and s.underlying_token_address = tk.underlying_token_address
-    left join dune.steakhouse.result_compound_v3_markets_data t
-        on s.chain = t.blockchain
-        and s.underlying_token_name = t.symbol
-        and s.dt = t.period
-    where s.protocol = 'compound-v3'
 ),
 -- ************************************************************************************************************************
 -- ******************************************      U S U A L  -  USD0++      **********************************************
@@ -398,10 +334,48 @@ usd0pp_transfers as (
                 when "to" = 0x0000000000000000000000000000000000000000 then -"value"
             end
         ) / 1e18 as amount
-    from usual_ethereum.usd0pp_evt_transfer tr
+    from {{ source('usual_ethereum', 'usd0pp_evt_transfer')}} tr
     join tokens tk
         on tr.contract_address = tk.token_address
     where tk.protocol = 'usual'
         and 0x0000000000000000000000000000000000000000 in (tr."from", tr."to")
+    {% if is_incremental() %}
+        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+    {% endif %}
     group by 1,2
 )
+, all_transfers as (
+    select chain, dt, token_address, amount from aave_transfers_v2
+    union all
+    select chain, dt, token_address, amount from aave_transfers_v3
+    union all
+    select chain, dt, token_address, amount from susds_transfers
+    union all
+    select chain, dt, token_address, amount from sdai_transfers
+    union all
+    select chain, dt, token_address, amount from usde_transfers
+    union all
+    select chain, dt, token_address, amount from sdeusd_transfers
+    union all
+    select chain, dt, token_address, amount from srusd_transfers
+    union all
+    select chain, dt, token_address, amount from wsrusd_transfers
+    union all
+    select chain, dt, token_address, amount from syrup_transfers
+    union all
+    select chain, dt, token_address, amount from compound_transfers_v2
+    union all
+    select chain, dt, token_address, amount from usd0pp_transfers
+)
+, yielding_daily as (
+    SELECT 
+        s.dt, s.chain as blockchain, s.category, s.protocol
+        , s.token_address, s.token_name
+        , s.underlying_token_address, s.underlying_token_name
+        , coalesce(alt.amount, 0) as daily_net_amount
+    FROM seq AS s LEFT JOIN all_transfers as alt on s.dt = alt.dt 
+        and s.chain = alt.chain and s.token_address = alt.token_address 
+
+)
+select *
+from yielding_daily

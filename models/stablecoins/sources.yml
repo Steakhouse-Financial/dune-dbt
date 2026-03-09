@@ -55,3 +55,72 @@ sources:
   - name: tokens_solana
     tables:
       - name: transfers
+
+  - name: steakhouse
+    database: dune
+    schema: steakhouse
+    description: "Materialized view from the Dune UI."
+    tables:
+      - name: result_token_price
+      - name: result_morpho_vaults_data
+      - name: result_compound_v3_markets_data
+
+  # dbt_yielding_stablecoins.sql
+  - name: usual_ethereum
+    tables:
+      - name: usd0pp_evt_transfer
+
+  - name: compound_v2_ethereum
+    tables:
+      - name: cerc20_evt_mint
+      - name: cerc20delegator_evt_mint
+      - name: cerc20_evt_redeem
+      - name: cerc20delegator_evt_redeem
+
+  - name: maplefinance_v2_ethereum
+    tables:
+      - name: savingcoin_evt_transfer
+      - name: savingcoinv2_evt_transfer
+      - name: pool_v2_evt_transfer
+
+  - name: reservoir_protocol_ethereum
+    tables:
+      - name: token_evt_transfer
+      - name: savingcoin_evt_transfer
+      - name: savingcoinv2_evt_transfer
+
+  - name: elixir_ethereum
+    tables:
+      - name: stdeusd_evt_transfer
+
+  - name: ethena_labs_ethereum
+    tables:
+      - name: stakedusdev2_evt_transfer
+
+  - name: maker_ethereum
+    tables:
+      - name: SavingsDai_evt_Deposit
+      - name: SavingsDai_evt_Withdraw
+      - name: pot_call_drip
+
+  - name: sky_ethereum
+    tables:
+      - name: susds_evt_transfer
+      - name: susds_evt_drip
+
+  - name: aave_v2_multichain
+    tables:
+      - name: atoken_evt_mint
+      - name: atoken_evt_burn
+      - name: lendingpool_evt_reservedataupdated
+
+  - name: aave_v3_multichain
+    tables:
+      - name: atoken_evt_mint
+      - name: atoken_evt_burn
+      - name: l2pool_evt_reservedataupdated
+      - name: pool_evt_ReserveDataUpdated
+
+  - name: aave_v3_plasma
+    tables:
+      - name: poolinstance_evt_reservedataupdated
