@@ -1,0 +1,183 @@
+version: 2
+
+models:
+  - name: dbt_tether_arbitrum  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT0 transfers on Arbitrum. 
+      It is materialized incrementally and partitioned by block time.
+    columns:
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source (hardcoded as 'ethereum')."
+      - name: amount
+        description: "The amount of USDT0 transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index
+
+  - name: dbt_tether_tron  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT transfers on Tron. 
+    columns:
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source."
+      - name: amount
+        description: "The amount of USDT transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index
+
+  - name: dbt_tether_ethereum  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT transfers on Ethereum. 
+    columns:
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source."
+      - name: amount
+        description: "The amount of USDT transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index
+
+  - name: dbt_tether_polygon  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT transfers on Polygon. 
+    columns:
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source."
+      - name: amount
+        description: "The amount of USDT transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index
+
+  - name: dbt_tether_bnb  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT transfers on BNB. 
+    columns:
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source."
+      - name: amount
+        description: "The amount of USDT transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index
