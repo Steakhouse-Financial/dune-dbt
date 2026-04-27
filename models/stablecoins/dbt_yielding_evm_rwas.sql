@@ -11,6 +11,7 @@
     alias = 'dbt_yielding_evm_rwas'
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
+    , unique_key = ['dt', 'blockchain', 'token_address']
     , properties = {
         "partitioned_by": "ARRAY['dt', 'blockchain']"
     }

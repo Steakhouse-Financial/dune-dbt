@@ -11,6 +11,7 @@
     alias = 'dbt_yielding_spl_rwas'
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
+    , unique_key = ['dt', 'token_address']
     , properties = {
         "partitioned_by": "ARRAY['dt', 'token_address']"
     }

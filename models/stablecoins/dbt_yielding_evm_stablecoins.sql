@@ -11,8 +11,9 @@
     , enabled=true
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
+    , unique_key = ['dt', 'blockchain', 'token_address']
     , properties = {
-        "partitioned_by": "ARRAY['dt', 'blockchain', 'token_name']"
+        "partitioned_by": "ARRAY['dt', 'blockchain']"
     }
 )
 }}
