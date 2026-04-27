@@ -1,8 +1,8 @@
 name: dbt prod incremental
 
 on:
-  # schedule:
-  #   - cron: '0 * * * *'  # Run every hour at minute 0
+  schedule:
+    - cron: '0 2 * * *'  # Run daily at 02:00 UTC
   # NOTE: Schedule is disabled by default. Uncomment when ready to enable hourly production runs.
   # Check the README.md to make sure you understand the credit costs associated with running dbt.
   workflow_dispatch:  # Allow manual triggers
@@ -18,7 +18,7 @@ jobs:
 
     env:
       DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
-      DUNE_TEAM_NAME: ${{ vars.DUNE_TEAM_NAME || 'dune' }}  # Set as GitHub Variable or defaults to 'dune'
+      DUNE_TEAM_NAME: ${{ vars.DUNE_TEAM_NAME || 'steakhouse' }}  # Set as GitHub Variable or defaults to 'steakhouse'
       DBT_TARGET: prod  # All dbt commands will use the prod target from profiles.yml
 
     steps:
