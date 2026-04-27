@@ -6,6 +6,10 @@ models:
       This model tracks USDT0 transfers on Arbitrum. 
       It is materialized incrementally and partitioned by block time.
     columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
       - name: period
         description: "The block timestamp when the transfer event occurred."
         tests:
@@ -42,6 +46,10 @@ models:
     description: >
       This model tracks USDT transfers on Tron. 
     columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
       - name: period
         description: "The block timestamp when the transfer event occurred."
         tests:
@@ -78,6 +86,10 @@ models:
     description: >
       This model tracks USDT transfers on Ethereum. 
     columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
       - name: period
         description: "The block timestamp when the transfer event occurred."
         tests:
@@ -114,6 +126,10 @@ models:
     description: >
       This model tracks USDT transfers on Polygon. 
     columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
       - name: period
         description: "The block timestamp when the transfer event occurred."
         tests:
@@ -150,6 +166,10 @@ models:
     description: >
       This model tracks USDT transfers on BNB. 
     columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
       - name: period
         description: "The block timestamp when the transfer event occurred."
         tests:
