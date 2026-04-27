@@ -2,8 +2,8 @@
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
-name: 'dbt_template'
-version: '1.0.0'
+name: 'steakhouse'
+version: '1.0.1'
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'dbt_template'
@@ -29,7 +29,7 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 models:
-  dbt_template:
+  steakhouse:
     # Config indicated by + and applies to all files under models/templates/
     +materialized: view       # fallback default, materialized should be overriden in model specific configs
     +view_security: invoker   # required security setting for views

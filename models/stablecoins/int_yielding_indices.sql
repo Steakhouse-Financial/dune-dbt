@@ -120,7 +120,7 @@ aave_indices_v3 as (
 -- *********************************     C O M P O U N D  V3 -  cUSDC, cUSDT       ****************************************
 -- ************************************************************************************************************************
 , compound_v3 as (
-    SELECT period as dt, blockchain, 'compound-v3' as protocol, token_address, asset_address, supply_index
+    SELECT period as dt, blockchain, 'compound-v3' as protocol, token_address, asset_address, supply_index as index
     FROM {{source('steakhouse', 'result_compound_v3_markets_data')}} as c
         JOIN tokens as t on c.asset_address = t.underlying_token_address and c.blockchain = t.chain
             AND t.protocol = 'compound-v3'
@@ -136,14 +136,19 @@ aave_indices_v3 as (
         and token_symbol like '%USD%'
 )
 , morpho_vaults as (
-    select dt, blockchain, 'morpho-v1' as protocol, vault_address, share_price_usd as supply_index 
+    select dt, blockchain, 'morpho-v1' as protocol, vault_address, share_price_usd as index 
     from {{source('steakhouse', 'result_morpho_vaults_data')}} as v
         JOIN morpho_stables_100k as m using (blockchain, vault_address)
 )
 
-
+SELECT dt, blockchain, protocol, token_address, index
+FROM compound_v3
+union all
+SELECT dt, blockchain, protocol, vault_address, index
+FROM morpho_vaults
+union all
 SELECT seq.dt
-    , seq.chain
+    , seq.chain as blockchain
     , seq.protocol
     , seq.token_address
     , coalesce(i.index, last_value(i.index) ignore nulls over (partition by seq.chain, seq.protocol, seq.token_address order by seq.dt)) as index
@@ -163,9 +168,3 @@ FROM seq LEFT JOIN (
     and seq.protocol = i.protocol
     and seq.chain = i.chain
     and seq.token_address = i.contract_address
-union all
-SELECT dt, blockchain, protocol, token_address, supply_index
-FROM compound_v3
-union all
-SELECT dt, blockchain, protocol, vault_address, supply_index
-FROM morpho_vaults

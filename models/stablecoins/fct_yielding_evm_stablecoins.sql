@@ -32,7 +32,7 @@ WITH combined_transfers as (
                 ELSE p.price_usd
             END as price_usd
         FROM all_balance AS ab
-        left join {{ ref('int_yielding_indices')}} i using (blockchain, dt)
+        left join {{ ref('int_yielding_indices')}} i using (blockchain, protocol, dt)
         left join {{source('steakhouse', 'result_token_price')}} p using (blockchain, dt)
         where (ab.token_address = 0xe86845788d6e3e5c2393ade1a051ae617d974c09 and p.token_address = 0x96f6ef951840721adbf46ac996b59e0235cb985c) or ab.token_address = p.token_address 
     )
