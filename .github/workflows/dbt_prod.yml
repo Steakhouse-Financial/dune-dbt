@@ -38,30 +38,6 @@ jobs:
       - name: Install dbt packages
         run: uv run dbt deps
 
-      # ── Credit guard ──────────────────────────────────────────────────────────
-      # Checks current Dune credit balance before running. Aborts if remaining
-      # credits are below the CREDIT_FLOOR threshold (default 100) to prevent
-      # the daily run from draining a low balance unexpectedly.
-      # Set CREDIT_FLOOR as a GitHub Variable to adjust the threshold.
-      - name: Check Dune credit balance
-        env:
-          CREDIT_FLOOR: ${{ vars.CREDIT_FLOOR || '100' }}
-        run: |
-          RESPONSE=$(curl -sf \
-            -H "X-DUNE-API-KEY: $DUNE_API_KEY" \
-            "https://api.dune.com/api/v1/auth/user")
-          REMAINING=$(echo "$RESPONSE" | python3 -c "
-          import sys, json
-          data = json.load(sys.stdin)
-          # credits_remaining is under the top-level user object
-          print(data.get('credits_remaining', data.get('credits', {}).get('remaining', 'unknown')))
-          " 2>/dev/null || echo "unknown")
-          echo "Credits remaining: $REMAINING"
-          if [ "$REMAINING" != "unknown" ] && [ "$REMAINING" -lt "$CREDIT_FLOOR" ] 2>/dev/null; then
-            echo "::error::Aborting: only $REMAINING credits remaining (floor: $CREDIT_FLOOR). Replenish credits or lower CREDIT_FLOOR variable."
-            exit 1
-          fi
-
       - name: Run models
         run: uv run dbt run --exclude config.materialized:view # views should only run when modified
 
