@@ -32,6 +32,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Run Seeds
+        run: uv run dbt seed
+
       - name: Install dependencies
         run: uv sync --locked
 
