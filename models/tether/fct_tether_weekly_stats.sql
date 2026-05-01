@@ -27,17 +27,17 @@ SELECT
     -- Optimized Count Aggregates using FILTER (DuneSQL/Trino native)
     COUNT(*) FILTER (WHERE amount < 100) as tx_100,
     COUNT(*) FILTER (WHERE amount >= 100 AND amount < 1000) as tx_1000,
-    COUNT(*) FILTER (WHERE amount >= 10000 AND amount < 10000) as tx_10000,
-    COUNT(*) FILTER (WHERE amount >= 100000 AND < 100000) as tx_100000,
-    COUNT(*) FILTER (WHERE amount >= 1000000 AND < 1000000) as tx_1000000,
-    COUNT(*) FILTER (WHERE amount >= 10000000) as tx_10000000,
+    COUNT(*) FILTER (WHERE amount >= 1000 AND amount < 10000) as tx_10000,
+    COUNT(*) FILTER (WHERE amount >= 10000 AND amount < 100000) as tx_100000,
+    COUNT(*) FILTER (WHERE amount >= 100000 AND amount < 1000000) as tx_1000000,
+    COUNT(*) FILTER (WHERE amount >= 1000000) as tx_10000000,
     
     -- Optimized Sum Aggregates
     SUM(amount) FILTER (WHERE amount < 100) as amt_100,
-    SUM(amount) FILTER (WHERE amount < 1000) as amt_1000,
-    SUM(amount) FILTER (WHERE amount < 10000) as amt_10000,
-    SUM(amount) FILTER (WHERE amount < 100000) as amt_100000,
-    SUM(amount) FILTER (WHERE amount < 1000000) as amt_1000000,
+    SUM(amount) FILTER (WHERE amount >= 100 AND amount < 1000) as amt_1000,
+    SUM(amount) FILTER (WHERE amount >= 1000 AND amount < 10000) as amt_10000,
+    SUM(amount) FILTER (WHERE amount >= 10000 AND amount < 100000) as amt_100000,
+    SUM(amount) FILTER (WHERE amount >= 100000 AND amount < 1000000) as amt_1000000,
     SUM(amount) FILTER (WHERE amount >= 1000000) as amt_10000000
 FROM all_transfers
 {% if is_incremental() %}
