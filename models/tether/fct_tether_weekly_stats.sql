@@ -16,7 +16,7 @@ WITH all_transfers AS (
 )
 
 SELECT 
-    date_trunc('month', dt) as period, 
+    date_trunc('week', dt) as period, 
     blockchain,
     SUM(amount) as amount, 
     COUNT(*) as txs,
@@ -41,6 +41,6 @@ SELECT
     SUM(amount) FILTER (WHERE amount >= 1000000) as amt_10000000
 FROM all_transfers
 {% if is_incremental() %}
-    WHERE period >= date_trunc('week', NOW())
+    WHERE dt >= date_trunc('week', NOW())
 {% endif %}
 GROUP BY 1, 2
