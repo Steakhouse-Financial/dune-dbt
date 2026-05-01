@@ -41,6 +41,6 @@ SELECT
     SUM(amount) FILTER (WHERE amount >= 1000000) as amt_10000000
 FROM all_transfers
 {% if is_incremental() %}
-    WHERE dt >= date_trunc('month', NOW())
+    WHERE period >= date_trunc('week', NOW())
 {% endif %}
 GROUP BY 1, 2
