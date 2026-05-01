@@ -32,14 +32,14 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Run Seeds
-        run: uv run dbt seed
-
       - name: Install dependencies
         run: uv sync --locked
 
       - name: Install dbt packages
         run: uv run dbt deps
+
+      - name: Run Seeds
+        run: uv run dbt seed
 
       - name: Run models
         run: uv run dbt run --exclude config.materialized:view # views should only run when modified
