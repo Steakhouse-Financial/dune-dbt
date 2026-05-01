@@ -7,6 +7,7 @@
     , properties = {
         "partitioned_by": "ARRAY['block_date']"
     }
+	, enabled = False
 )
 }}
 
