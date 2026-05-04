@@ -19,5 +19,5 @@ SELECT
 FROM {{ source('tether_ethereum', 'tether_usd_evt_transfer') }}
 WHERE contract_address = 0xdac17f958d2ee523a2206206994597c13d831ec7
 {% if is_incremental() %}
-AND evt_block_time >= NOW() - interval '3' day
+AND evt_block_time >= NOW() - interval '2' day
 {% endif %}

@@ -201,3 +201,43 @@ models:
           combination_of_columns:
             - tx_hash
             - evt_index
+
+  - name: dbt_tether_solana  # This should match your file name (or alias)
+    description: >
+      This model tracks USDT transfers on Solana. 
+    columns:
+      - name: dt
+        description: "The date when the transfer event occurred."
+        tests:
+          - not_null
+      - name: period
+        description: "The block timestamp when the transfer event occurred."
+        tests:
+          - not_null
+      - name: blockchain
+        description: "The blockchain source."
+      - name: amount
+        description: "The amount of USDT transferred, adjusted for 6 decimal places (USDT's native decimals)."
+      - name: from
+        quote: true
+        description: "The wallet address that sent the tokens."
+        tests:
+          - not_null
+      - name: to
+        quote: true
+        description: "The wallet address that received the tokens."
+        tests:
+          - not_null
+      - name: tx_hash
+        description: "The unique transaction hash for the transfer."
+        tests:
+          - not_null
+      - name: evt_index
+        description: "The log index of the event within the transaction."
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - tx_hash
+            - evt_index

@@ -19,5 +19,5 @@ SELECT
 FROM {{ source('tether_polygon', 'uchilderc20_evt_transfer') }}
 WHERE contract_address = 0xc2132d05d31c914a87c6611c10748aeb04b58e8f
 {% if is_incremental() %}
-AND evt_block_time >= NOW() - interval '3' day
+AND evt_block_time >= NOW() - interval '2' day
 {% endif %}

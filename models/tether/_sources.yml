@@ -16,3 +16,6 @@ sources:
   - name: tether_ethereum
     tables:
       - name: tether_usd_evt_transfer
+  - name: tokens_solana
+    tables:
+      - name: transfers

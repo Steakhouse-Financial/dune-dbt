@@ -19,5 +19,5 @@ SELECT
 FROM {{ source('bep20usdt_bnb', 'bep20usdt_evt_transfer') }}
 WHERE contract_address = 0x55d398326f99059ff775485246999027b3197955
 {% if is_incremental() %}
-AND evt_block_time >= NOW() - interval '3' day
+AND evt_block_time >= NOW() - interval '2' day
 {% endif %}

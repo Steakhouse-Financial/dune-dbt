@@ -4,15 +4,23 @@
 ) }}
 
 WITH all_transfers AS (
-    SELECT * FROM {{ ref('dbt_tether_tron') }}
+    SELECT dt, amount, blockchain, CAST("from" as VARCHAR) as "from", CAST("to" as VARCHAR) as "to" FROM {{ ref('dbt_tether_tron') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
     UNION ALL
-    SELECT * FROM {{ ref('dbt_tether_ethereum') }}
+    SELECT dt, amount, blockchain, CAST("from" as VARCHAR) as "from", CAST("to" as VARCHAR) as "to" FROM {{ ref('dbt_tether_ethereum') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
     UNION ALL
-    SELECT * FROM {{ ref('dbt_tether_polygon') }}
+    SELECT dt, amount, blockchain, CAST("from" as VARCHAR) as "from", CAST("to" as VARCHAR) as "to" FROM {{ ref('dbt_tether_polygon') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
     UNION ALL
-    SELECT * FROM {{ ref('dbt_tether_bnb') }}
+    SELECT dt, amount, blockchain, CAST("from" as VARCHAR) as "from", CAST("to" as VARCHAR) as "to" FROM {{ ref('dbt_tether_bnb') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
     UNION ALL
-    SELECT * FROM {{ ref('dbt_tether_arbitrum') }}
+    SELECT dt, amount, blockchain, CAST("from" as VARCHAR) as "from", CAST("to" as VARCHAR) as "to" FROM {{ ref('dbt_tether_arbitrum') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
+    UNION ALL
+    SELECT dt, amount, blockchain, "from", "to" FROM {{ ref('dbt_tether_solana') }}
+    {% if is_incremental() %} WHERE dt >= date_trunc('week', NOW() - interval '2' day) {% endif %}
 )
 
 SELECT 
@@ -20,9 +28,9 @@ SELECT
     blockchain,
     SUM(amount) as amount, 
     COUNT(*) as txs,
-    -- Use approx_distinct for massive performance gain on large datasets
-    APPROX_DISTINCT("from") as senders,
-    APPROX_DISTINCT("to") as receivers,
+    -- Use approx_distinct 1% for massive performance gain on large datasets
+    APPROX_DISTINCT("from", 0.01) as senders,
+    APPROX_DISTINCT("to", 0.01) as receivers,
     
     -- Optimized Count Aggregates using FILTER (DuneSQL/Trino native)
     COUNT(*) FILTER (WHERE amount < 100) as tx_100,
@@ -40,7 +48,4 @@ SELECT
     SUM(amount) FILTER (WHERE amount >= 100000 AND amount < 1000000) as amt_1000000,
     SUM(amount) FILTER (WHERE amount >= 1000000) as amt_10000000
 FROM all_transfers
-{% if is_incremental() %}
-    WHERE dt >= date_trunc('week', NOW())
-{% endif %}
 GROUP BY 1, 2

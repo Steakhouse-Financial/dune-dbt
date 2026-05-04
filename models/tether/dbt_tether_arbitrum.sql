@@ -19,5 +19,5 @@ SELECT
 FROM {{ source('tether_arbitrum', 'ArbitrumExtension_evt_Transfer') }}
 WHERE contract_address = 0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9
 {% if is_incremental() %}
-AND evt_block_time >= NOW() - interval '3' day
+AND evt_block_time >= NOW() - interval '2' day
 {% endif %}
