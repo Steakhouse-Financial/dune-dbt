@@ -6,6 +6,7 @@
 {{config(
     alias = 'fct_yielding_evm_stablecoins'
     , materialized = 'table'
+    , on_table_exists = 'drop'
     , enabled=true
 
 )}}

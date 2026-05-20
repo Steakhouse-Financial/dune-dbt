@@ -10,6 +10,7 @@
 {{ config(
     alias = 'int_yielding_indices'
     , materialized = 'table'
+    , on_table_exists = 'drop'
     , enabled=true
 )}}
 
