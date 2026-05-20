@@ -2,7 +2,9 @@
     alias = 'dbt_tether_tron'
     , materialized='incremental'
     , incremental_strategy='delete+insert'
-    , partition_by=['dt']
+    , properties ={
+        "partitioned_by": "ARRAY['dt']"
+    }
     , unique_key=['dt', 'tx_hash', 'evt_index']
     , enabled = true
 ) }}
