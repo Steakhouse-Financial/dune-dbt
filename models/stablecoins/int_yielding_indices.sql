@@ -43,10 +43,6 @@ WITH
         evt_block_date as dt,
         max_by(liquidityIndex / 1e27, evt_block_time) as index
     from {{source('aave_v2_multichain', 'lendingpool_evt_reservedataupdated')}}
-    WHERE 1=1 
-    {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
-    {% endif %}
     group by 1, 3, 4, 5
 ),
 -- get aave supply indices per reserve and backfill it if no pool updates
@@ -61,10 +57,7 @@ aave_indices_v3 as (
             evt_block_date as dt,
             max_by(liquidityIndex / 1e27, evt_block_time) as index
         from {{source('aave_v3_multichain', 'pool_evt_ReserveDataUpdated')}} -- ethereum, avalanche
-        WHERE 1=1  and chain in ('avalanche_c', 'bnb', 'ethereum', 'polygon')
-        {% if is_incremental() %}
-            AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
-        {% endif %}
+        WHERE chain in ('avalanche_c', 'bnb', 'ethereum', 'polygon')
         group by 1, 2, 3, 4
         union all
         select
@@ -74,10 +67,7 @@ aave_indices_v3 as (
             evt_block_date as dt,
             max_by(liquidityIndex / 1e27, evt_block_time) as index
         from {{source('aave_v3_multichain', 'l2pool_evt_reservedataupdated')}} -- arbitrum 
-        WHERE 1=1 and chain in ('arbitrum', 'base', 'ink')
-        {% if is_incremental() %}
-            AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
-        {% endif %}
+        WHERE chain in ('arbitrum', 'base', 'ink')
         group by 1, 2, 3, 4
         union all
         select
@@ -87,10 +77,6 @@ aave_indices_v3 as (
             evt_block_date as dt,
             max_by(liquidityIndex / 1e27, evt_block_time) as index
         from  {{source('aave_v3_plasma', 'poolinstance_evt_reservedataupdated')}} -- plasma
-        WHERE 1=1 
-        {% if is_incremental() %}
-            AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
-        {% endif %}
         group by 2, 3, 4
     )
 )
@@ -99,10 +85,6 @@ aave_indices_v3 as (
     select  'ethereum' as chain, 'sky' as protocol, contract_address, 0xdc035d45d973e3ec169d2276ddab16f1e407384f as underlying_token_address
         , evt_block_date as dt, MAX_BY(chi / 1e27, evt_block_time) as index
     FROM {{ source('sky_ethereum', 'susds_evt_drip')}}
-    WHERE 1=1 
-    {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
-    {% endif %}
     GROUP BY 3, 5
 )
 , maker as (
@@ -111,9 +93,6 @@ aave_indices_v3 as (
         , call_block_date as dt, MAX_BY(output_tmp / 1e27, call_block_time) as index
     FROM {{ source('maker_ethereum', 'pot_call_drip')}}
     where call_success = true
-    {% if is_incremental() %}
-        AND call_block_date >= date_trunc('day', NOW() - interval'1' day)
-    {% endif %}
     GROUP BY 3, 5
 )
 -- ************************************************************************************************************************

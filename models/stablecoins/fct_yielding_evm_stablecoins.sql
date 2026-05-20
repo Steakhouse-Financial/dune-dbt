@@ -5,7 +5,7 @@
 
 {{config(
     alias = 'fct_yielding_evm_stablecoins'
-    , materialized = 'view'
+    , materialized = 'table'
     , enabled=true
 
 )}}
@@ -24,10 +24,10 @@ WITH combined_transfers as (
         , token_name, token_address, balance, price_usd
         , price_usd * balance as value_usd
     FROM (
-        SELECT blockchain, dt, protocol
-            , token_name, ab.token_address, balance
+        SELECT ab.blockchain, ab.dt,ab. protocol
+            , ab.token_name, ab.token_address, balance
             , CASE
-                WHEN token_name in ('BUIDL', 'BUIDL-I', 'BENJI', 'WTGXX') THEN 1
+                WHEN ab.token_name in ('BUIDL', 'BUIDL-I', 'BENJI', 'WTGXX') THEN 1
                 WHEN i.index is not null then i.index
                 ELSE p.price_usd
             END as price_usd
@@ -35,8 +35,8 @@ WITH combined_transfers as (
         left join {{ ref('int_yielding_indices')}} i 
             on ab.blockchain = i.blockchain and ab.protocol = i.protocol and ab.dt = i.dt
             and ab.token_address = i.token_address
-        left join {{source('steakhouse', 'result_token_price')}} p using (blockchain, dt)
-            on ab.blockchain = p.blockchain and ab.dt = i.dt
+        left join {{source('steakhouse', 'result_token_price')}} p 
+            on ab.blockchain = p.blockchain and ab.dt = p.dt
             AND (
                 (ab.token_address = 0xe86845788d6e3e5c2393ade1a051ae617d974c09 and p.token_address = 0x96f6ef951840721adbf46ac996b59e0235cb985c)
                 OR ab.token_address = p.token_address 

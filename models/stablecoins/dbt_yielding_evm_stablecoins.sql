@@ -36,10 +36,20 @@ with
         t.underlying_token_name,
         date(s.dt) as dt
     from (
-        select chain, category, protocol, token_address, token_name, underlying_token_address, underlying_token_name, min(start_date) as start_date
+        select chain, category, protocol, token_address
+            , token_name, underlying_token_address
+            , underlying_token_name, min(start_date) as start_date
         from tokens group by 1,2,3,4,5,6,7
     ) t
-    cross join unnest(sequence(t.start_date, current_date, interval '1' day)) as s(dt)
+    cross join unnest(sequence(
+        {% if is_incremental() %}
+            greatest(t.start_date, current_date - interval'2' day),    
+        {% else %}
+            t.start_date,
+        {% endif %}
+        current_date,
+        interval '1' day
+    )) as s(dt)
 ),
 -- ************************************************************************************************************************
 -- *********************************                     A A V E  V2                   ************************************
@@ -61,7 +71,7 @@ aave_transfers_v2 as (
             on tr.chain = tk.chain and tr.contract_address = tk.token_address
         where tk.protocol = 'aave-v2'
         {% if is_incremental() %}
-            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
         union all
         select
@@ -74,7 +84,7 @@ aave_transfers_v2 as (
             on tr.chain = tk.chain and tr.contract_address = tk.token_address
         where tk.protocol = 'aave-v2'
         {% if is_incremental() %}
-            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     )
     group by 1,2,3
@@ -101,7 +111,7 @@ aave_transfers_v3 as (
             and m.contract_address = tk.token_address
             where tk.protocol = 'aave-v3'
         {% if is_incremental() %}
-            AND m.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND m.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     
         union all
@@ -116,7 +126,7 @@ aave_transfers_v3 as (
             and b.contract_address = tk.token_address
             where tk.protocol = 'aave-v3'
         {% if is_incremental() %}
-            AND b.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND b.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     )
     group by 1,2,3
@@ -138,7 +148,7 @@ susds_transfers as (
     from {{ source('sky_ethereum', 'susds_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
     {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -164,7 +174,7 @@ sdai_transfers as (
     )
     WHERE 1=1
     {% if is_incremental() %}
-        AND dt >= date_trunc('day', NOW() - interval'1' day)
+        AND dt >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -185,7 +195,7 @@ usde_transfers as (
     from {{ source('ethena_labs_ethereum', 'stakedusdev2_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
     {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -206,7 +216,7 @@ sdeusd_transfers as (
     from  {{ source('elixir_ethereum', 'stdeusd_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
     {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -227,7 +237,7 @@ srusd_transfers as (
     from  {{ source('reservoir_protocol_ethereum', 'savingcoin_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
     {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -245,7 +255,7 @@ wsrusd_transfers as (
     from {{ source('reservoir_protocol_ethereum', 'savingcoinv2_evt_transfer')}}
     where 0x0000000000000000000000000000000000000000 in ("from", "to")
     {% if is_incremental() %}
-        AND evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -269,7 +279,7 @@ syrup_transfers as (
     where tk.protocol = 'maple'
         and 0x0000000000000000000000000000000000000000 in (tr.owner_, tr.recipient_)
     {% if is_incremental() %}
-        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 ),
@@ -298,7 +308,7 @@ compound_transfers_v2 as (
         join tokens tk on tr.contract_address = tk.token_address
         where tk.protocol = 'compound-v2'
         {% if is_incremental() %}
-            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     
         union all
@@ -316,7 +326,7 @@ compound_transfers_v2 as (
         join tokens tk on tr.contract_address = tk.token_address
         where tk.protocol = 'compound-v2'
         {% if is_incremental() %}
-            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     )
     group by 1,2
@@ -341,7 +351,7 @@ usd0pp_transfers as (
     where tk.protocol = 'usual'
         and 0x0000000000000000000000000000000000000000 in (tr."from", tr."to")
     {% if is_incremental() %}
-        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND tr.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     group by 1,2
 )
@@ -380,3 +390,6 @@ usd0pp_transfers as (
 )
 select *
 from yielding_daily
+{% if is_incremental() %}
+WHERE dt >= date_trunc('day', NOW() - interval '2' day)
+{% endif %}

@@ -35,10 +35,19 @@ erc20_tokens as (
         t.token_name,
         date(s.dt) as dt
     from (
-        select blockchain, protocol, token_address, token_name, start_date
+        select blockchain, protocol, token_address
+            , token_name, start_date
         from unioned_tokens
     ) t
-    cross join unnest(sequence(t.start_date, current_date, interval '1' day)) as s(dt)
+    cross join unnest(sequence(
+        {% if is_incremental() %}
+            greatest(t.start_date, current_date - interval'2' day),
+        {% else %}
+            t.start_date,
+        {% endif %}
+        current_date,
+        interval '1' day
+    )) as s(dt)
 ),
 backed_transfers as (
     /* Backed Finance */
@@ -58,7 +67,7 @@ backed_transfers as (
             and tk.blockchain = 'gnosis'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
     
@@ -81,7 +90,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
     UNION all
@@ -101,7 +110,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
     UNION all
@@ -121,7 +130,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
     
@@ -143,7 +152,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2
     UNION all
@@ -162,7 +171,7 @@ ondo_transfers as (
             and tk.blockchain = t.chain
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 )
@@ -183,7 +192,7 @@ ondo_transfers as (
             and t.chain = tk.blockchain
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval '1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -205,7 +214,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
     UNION all
@@ -224,7 +233,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -246,7 +255,7 @@ ondo_transfers as (
             and tk.blockchain = t.chain
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -268,7 +277,7 @@ ondo_transfers as (
             and tk.blockchain = t.chain
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -290,7 +299,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -312,7 +321,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 
@@ -333,7 +342,7 @@ ondo_transfers as (
             and tk.blockchain = 'ethereum'
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
     {% if is_incremental() %}
-        AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+        AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
     {% endif %}
     GROUP BY 1, 2, 3
 )
@@ -354,7 +363,7 @@ ondo_transfers as (
             and tk.blockchain = t.chain
     WHERE 0x0000000000000000000000000000000000000000 in (t."from", t."to")
         {% if is_incremental() %}
-            AND t.evt_block_date >= date_trunc('day', NOW() - interval'1' day)
+            AND t.evt_block_date >= date_trunc('day', NOW() - interval'2' day)
         {% endif %}
     GROUP BY 1, 2, 3
 
@@ -399,4 +408,6 @@ rwa_daily as (
 )
 select * 
 from rwa_daily
-
+{% if is_incremental() %}
+WHERE dt >= date_trunc('day', NOW() - interval '2' day)
+{% endif %}

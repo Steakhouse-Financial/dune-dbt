@@ -13,7 +13,7 @@
     , incremental_strategy = 'delete+insert'
     , unique_key = ['dt', 'token_address']
     , properties = {
-        "partitioned_by": "ARRAY['dt', 'token_address']"
+        "partitioned_by": "ARRAY['dt']"
     }
 )
 }}
@@ -34,10 +34,19 @@ with spl_tokens as (
         t.token_name,
         date(s.dt) as dt
     from (
-        select blockchain, protocol, token_address, token_name, start_date
+        select blockchain, protocol, token_address
+            , token_name, start_date
         from unioned_tokens
     ) t
-    cross join unnest(sequence(t.start_date, current_date, interval '1' day)) as s(dt)
+    cross join unnest(sequence(
+        {% if is_incremental() %}
+            greatest(t.start_date, current_date - interval'2' day),
+        {% else %}
+            t.start_date,
+        {% endif %}
+        current_date,
+        interval '1' day
+    )) as s(dt)
 )
 , rwa_transfers_sol as (
     select
@@ -54,9 +63,9 @@ with spl_tokens as (
     join spl_tokens as tk
         on tr.token_mint_address = tk.token_address
     where tr.block_date >= tk.start_date
-        {% if is_incremental() %}
-            AND tr.block_date >= date_trunc('day', NOW() - interval'1' day)
-        {% endif %}
+    {% if is_incremental() %}
+        AND tr.block_date >= date_trunc('day', NOW() - interval'2' day)
+    {% endif %}
     group by 1, 2
 ),
 rwa_daily as (
@@ -74,4 +83,6 @@ rwa_daily as (
 )
 select * 
 from rwa_daily
-
+{% if is_incremental() %}
+WHERE dt >= date_trunc('day', NOW() - interval '2' day)
+{% endif %}

@@ -5,7 +5,7 @@
 
 {{config(
     alias = 'fct_yielding_rwas'
-    , materialized = 'view'
+    , materialized = 'table'
     , enabled=true
 
 )}}
@@ -27,15 +27,18 @@ WITH combined_transfers as (
         , token_name, token_address, balance, price_usd
         , price_usd * balance as value_usd
     FROM (
-        SELECT blockchain, dt, protocol
+        SELECT ab.blockchain, ab.dt, ab.protocol
             , token_name, ab.token_address, balance
             , CASE
                 WHEN token_name in ('BUIDL', 'BUIDL-I', 'BENJI', 'WTGXX') THEN 1
                 ELSE p.price_usd
             END as price_usd
         FROM all_balance AS ab
-        left join {{source('steakhouse', 'result_token_price')}} p using (blockchain, dt)
-        where (ab.token_address = 0xe86845788d6e3e5c2393ade1a051ae617d974c09 and p.token_address = 0x96f6ef951840721adbf46ac996b59e0235cb985c) or ab.token_address = p.token_address 
+        left join {{source('steakhouse', 'result_token_price')}} p 
+        on ab.blockchain = p.blockchain and ab.dt = p.dt and (
+            (ab.token_address = 0xe86845788d6e3e5c2393ade1a051ae617d974c09 and p.token_address = 0x96f6ef951840721adbf46ac996b59e0235cb985c)
+            OR ab.token_address = p.token_address 
+        ) 
     )
 )
 select *
