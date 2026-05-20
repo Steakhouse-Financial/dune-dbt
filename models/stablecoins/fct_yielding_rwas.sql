@@ -6,6 +6,7 @@
 {{config(
     alias = 'fct_yielding_rwas'
     , materialized = 'table'
+    , on_table_exists = 'drop'
     , enabled=true
 
 )}}

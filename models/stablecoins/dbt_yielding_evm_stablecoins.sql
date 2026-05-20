@@ -9,6 +9,7 @@
 {{ config(
     alias = 'dbt_yielding_evm_stablecoins'
     , enabled=true
+    , on_table_exists = 'drop'
     , materialized = 'incremental'
     , incremental_strategy = 'delete+insert'
     , unique_key = ['dt', 'blockchain', 'token_address']
