@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    on_table_exists = 'drop', 
     unique_key=['dt', 'blockchain', 'token_address']
 ) }}
 
