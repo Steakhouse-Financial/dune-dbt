@@ -16,7 +16,7 @@ SELECT
     to_owner as "to",
     tx_id as tx_hash,
     tx_index as evt_index
-FROM {{ source('tokens_solana', 'transfers') }}
+FROM {{ source('tokens_solana', 'tether_solana_transfers') }}
 WHERE token_mint_address = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 {% if is_incremental() %}
 AND block_time >= NOW() - interval '2' day

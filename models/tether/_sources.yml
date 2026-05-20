@@ -18,4 +18,5 @@ sources:
       - name: tether_usd_evt_transfer
   - name: tokens_solana
     tables:
-      - name: transfers
+      - name: tether_solana_transfers
+        identifier: transfers
